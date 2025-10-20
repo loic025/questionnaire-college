@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Grille d'auto-évaluation</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: auto; padding: 20px; }
+    .question { margin-bottom: 15px; }
+    .responses { display: flex; gap: 10px; }
+    label { display: block; margin-bottom: 5px; }
+    select, input[type=text] { width: 100%; padding: 5px; margin-bottom: 10px; }
+    button { padding: 10px 20px; margin-top: 20px; }
+    .instructions { font-style: italic; margin-bottom: 20px; }
+    .subgroup-title { font-weight: bold; margin-top: 30px; margin-bottom: 10px; }
+    #finalMessage { display: none; font-size: 18px; font-weight: bold; text-align: center; margin-top: 40px; }
+    #welcome { text-align: center; margin-top: 40px; }
+    #welcome img { max-width: 200px; margin-bottom: 20px; }
+    #questionnaireForm { display: none; }
+  </style>
+</head>
+<body>
+  <div id="welcome">
+    <img src="static/logo-education.png" alt="Logo Ministère" style="float:left; margin-right:15px;">
+    <p>
+      Ce questionnaire est anonyme, il permet de mieux comprendre certains problèmes qui peuvent se passer entre collégiens.<br>
+      Nous comptons sur toi pour répondre sincèrement et te remercions de ton aide.<br><br>
+      Tu devras cocher la case qui correspond à ta réponse en tenant compte de ce qui s'est passé depuis le début de l'année scolaire.
+    </p>
+    <button onclick="startQuestionnaire()">Commencer</button>
+  </div>
+
+  <form id="questionnaireForm">
+    <h1>Grille d'auto-évaluation</h1>
+    <label>Classe :</label>
+    <select name="classe" required>
+      <option value="">--Choisir--</option>
+      <option>6e</option>
+      <option>5e</option>
+      <option>4e</option>
+      <option>3e</option>
+    </select>
+
+    <label>Sexe :</label>
+    <select name="sexe" required>
+      <option value="">--Choisir--</option>
+      <option>F</option>
+      <option>M</option>
+      <option>Autre</option>
+    </select>
+
+    <label>Année de naissance :</label>
+    <select name="annee" required>
+      <option value="">--Choisir--</option>
+      <option>2015 ou après</option>
+      <option>2014</option>
+      <option>2013</option>
+      <option>2012</option>
+      <option>2011</option>
+      <option>2010 ou avant</option>
+    </select>
+
+    <p class="instructions">1 = Jamais &nbsp;&nbsp;&nbsp; 2 = Parfois &nbsp;&nbsp;&nbsp; 3 = Souvent &nbsp;&nbsp;&nbsp; 4 = Très souvent</p>
+    <div id="questions"></div>
+    <button type="submit">Envoyer</button>
+  </form>
+
+  <div id="finalMessage">
+    L’auto-évaluation est terminée. Merci d’avoir participé !
+  </div>
+
+  <script>
+    const questionsText = [
+  "As-tu peur sur le trajet du collège à cause d’un ou plusieurs élèves ?",
+  "As-tu peur d’aller au collège à cause d’un ou plusieurs élèves ?",
+  "As-tu menti pour rester chez toi par peur de retrouver un ou plusieurs élèves au collège ?",
+  "As-tu séché les cours à cause de tes relations avec un ou plusieurs élèves ?",
+  "Tes notes baissent-elles à cause de ce que tu vis au collège ?",
+  "Te sens-tu démotivé(e) à cause de ce que tu vis au collège ?",
+  "As-tu du mal à faire tes devoirs à cause de ce que tu vis au collège ?",
+  "As-tu du mal à t’endormir ou fais-tu des cauchemars à cause de ce que tu vis au collège ?",
+  "As-tu mal au ventre ou à la tête à cause de ce que tu vis au collège ?",
+  "Est-ce que tu te sens triste à cause de ce que tu vis au collège ?",
+  "Est-ce que tu te sens seul(e) au collège ?",
+  "As-tu peur d’aller en récréation à cause d’un ou plusieurs élèves ?",
+  "Te mets-tu en colère ou es-tu agressif(ve) sans savoir pourquoi ?",
+  "Es-tu exclu(e) des groupes de travail par un ou plusieurs élèves ?",
+  "As-tu été mis(e) à l’écart dans la cour par un ou plusieurs élèves ?",
+  "Manges-tu seul quand tu manges au collège (class'échecs, ...) ?",
+  "Est-ce qu’un ou plusieurs élèves t’empêchent de manger tranquillement au collège (class'échecs, ...) ?",
+  "Est-ce qu’un ou plusieurs élèves se moquent de toi ou t’insultent ?",
+  "Est-ce qu’un ou plusieurs élèves font courir des rumeurs sur toi ?",
+  "Est-ce qu’un ou plusieurs élèves te rabaissent ou t’humilient ?",
+  "Est-ce qu’un ou plusieurs élèves t’ont déjà menacé(e) ?",
+  "T’es-tu bagarré(e) avec un ou plusieurs élèves ?",
+  "Est-ce qu’un ou plusieurs élèves t’ont bousculé(e) volontairement ?",
+  "As-tu été agressé(e) physiquement par un ou plusieurs élèves ?",
+  "Est-ce qu’un ou plusieurs élèves t’ont volé des affaires ou ont menacé de le faire ?",
+  "As-tu participé à un jeu dangereux à la demande d’un ou plusieurs élèves ?",
+  "As-tu été embêté(e) aux toilettes ?",
+  "Est-ce qu’on a essayé de te retirer tes habits ?",
+  "As-tu reçu des messages insultants ou menaçants en ligne ?",
+  "Un ou plusieurs élèves font-ils circuler des photos ou messages sans ton accord ?",
+  "Des photos ou vidéos intimes de toi ont-elles circulé sans ton accord ?",
+  "Tes coordonnées ont-elles circulé sans ton accord ?",
+  "Es-tu victime d’insultes à caractère sexuel ?",
+  "As-tu subi des violences à caractère sexuel ?"
+];
+    function startQuestionnaire() {
+      document.getElementById('welcome').style.display = 'none';
+      document.getElementById('questionnaireForm').style.display = 'block';
+    }
+    function renderQuestions() {
+      const container = document.getElementById('questions');
+      questionsText.forEach((question, index) => {
+        if (index === 0) {
+          const sub1 = document.createElement('div');
+          sub1.className = 'subgroup-title';
+          sub1.textContent = "Comment te sens-tu ?";
+          container.appendChild(sub1);
+        } else if (index === 13) {
+          const sub2 = document.createElement('div');
+          sub2.className = 'subgroup-title';
+          sub2.textContent = "Comment cela se passe-t-il avec les autres élèves ?";
+          container.appendChild(sub2);
+        }
+        const div = document.createElement('div');
+        div.className = 'question';
+        const label = document.createElement('label');
+        label.textContent = `${index + 1}. ${question}`;
+        div.appendChild(label);
+        const responses = document.createElement('div');
+        responses.className = 'responses';
+        for (let i = 1; i <= 4; i++) {
+          const input = document.createElement('input');
+          input.type = 'radio';
+          input.name = `q${index + 1}`;
+          input.value = i;
+          input.required = true;
+          const lbl = document.createElement('label');
+          lbl.textContent = i;
+          lbl.prepend(input);
+          responses.appendChild(lbl);
+        }
+        div.appendChild(responses);
+        container.appendChild(div);
+      });
+    }
+    document.getElementById('questionnaireForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const data = {};
+      formData.forEach((value, key) => {
+        data[key] = value;
+      });
+      await fetch('/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      document.getElementById('questionnaireForm').style.display = 'none';
+      document.getElementById('finalMessage').style.display = 'block';
+    });
+    renderQuestions();
+  </script>
+</body>
+</html>

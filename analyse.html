@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Analyse des résultats - Accès protégé</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 1000px; margin: auto; padding: 20px; }
+    h1 { text-align: center; }
+    .filters { display: flex; gap: 10px; margin: 20px 0; flex-wrap: wrap; }
+    .chart-container { margin: 20px 0; }
+    #auth { text-align: center; margin-top: 100px; }
+    input[type=password] { padding: 5px; font-size: 1rem; }
+    button { padding: 8px 16px; font-size: 1rem; margin: 5px; }
+    table.synthese, table.synthese td, table.synthese th {
+      border: 1px solid #333;
+      border-collapse: collapse;
+      text-align: center;
+      padding: 6px;
+    }
+    table.synthese {
+      margin: 20px auto;
+      background-color: #fff;
+    }
+    .cell-yellow { background-color: #fdf5b5; }
+    .cell-green { background-color: #c9f7c3; }
+    .cell-grey { background-color: #d3d3d3; }
+    .highlight { border: 3px solid red; font-weight: bold; }
+    .summary-boxes {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .summary-box {
+      border: 2px solid #ccc;
+      padding: 10px;
+      text-align: center;
+      width: 150px;
+      font-weight: bold;
+      background: #f9f9f9;
+    }
+      #chartsContainer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+      margin-top: 30px;
+    }
+    .chart-box {
+      flex: 1 1 250px;
+      max-width: 250px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div id="auth">
+    <h2>Connexion requise</h2>
+    <p>Mot de passe :</p>
+    <input type="password" id="passwordInput">
+    <button id="validerBtn">Valider</button>
+    <p id="authError" style="color:red;"></p>
+  </div>
+
+  <div id="content" style="display:none">
+    <h1>Analyse des résultats</h1>
+
+    <div style="text-align:right; margin-bottom: 20px;">
+      <button onclick="exportCSV()">📥 Exporter toutes les réponses</button>
+      <button onclick="exportFilteredCSV()">🎯 Exporter réponses filtrées</button>
+      <button onclick="window.print()">📄 Exporter en PDF</button>
+    </div>
+
+    <div class="filters">
+      <label>Classe :
+        <select id="filterClasse">
+          <option value="">Toutes</option>
+          <option>6e</option>
+          <option>5e</option>
+          <option>4e</option>
+          <option>3e</option>
+        </select>
+      </label>
+      <label>Sexe :
+        <select id="filterSexe">
+          <option value="">Tous</option>
+          <option>F</option>
+          <option>M</option>
+          <option>Autre</option>
+        </select>
+      </label>
+      <label>Élève :
+        <select id="filterEleve"></select>
+      </label>
+      <label>Question :
+        <select id="filterQuestion"></select>
+      </label>
+    </div>
+
+    <div id="summaryBoxes" class="summary-boxes"></div>
+    <div id="synthese"></div>
+    <div id="chartsContainer"></div>
+  </div>
+
+
+  <script>
+    const questions = [
+      "As-tu peur sur le trajet du collège à cause d’un ou plusieurs élèves ?",
+      "As-tu peur d’aller au collège à cause d’un ou plusieurs élèves ?",
+      "As-tu menti pour rester chez toi par peur de retrouver un ou plusieurs élèves au collège ?",
+      "As-tu séché les cours à cause de tes relations avec un ou plusieurs élèves ?",
+      "Tes notes baissent-elles à cause de ce que tu vis au collège ?",
+      "Te sens-tu démotivé(e) à cause de ce que tu vis au collège ?",
+      "As-tu du mal à faire tes devoirs à cause de ce que tu vis au collège ?",
+      "As-tu du mal à t’endormir ou fais-tu des cauchemars à cause de ce que tu vis au collège ?",
+      "As-tu mal au ventre ou à la tête à cause de ce que tu vis au collège ?",
+      "Est-ce que tu te sens triste à cause de ce que tu vis au collège ?",
+      "Est-ce que tu te sens seul(e) au collège ?",
+      "As-tu peur d’aller en récréation à cause d’un ou plusieurs élèves ?",
+      "Te mets-tu en colère ou es-tu agressif(ve) sans savoir pourquoi ?",
+      "Es-tu exclu(e) des groupes de travail par un ou plusieurs élèves ?",
+      "As-tu été mis(e) à l’écart dans la cour par un ou plusieurs élèves ?",
+      "Manges-tu seul quand tu manges au collège (class'échecs, ...) ?",
+      "Est-ce qu’un ou plusieurs élèves t’empêchent de manger tranquillement au collège (class'échecs, ...) ?",
+      "Est-ce qu’un ou plusieurs élèves se moquent de toi ou t’insultent ?",
+      "Est-ce qu’un ou plusieurs élèves font courir des rumeurs sur toi ?",
+      "Est-ce qu’un ou plusieurs élèves te rabaissent ou t’humilient ?",
+      "Est-ce qu’un ou plusieurs élèves t’ont déjà menacé(e) ?",
+      "T’es-tu bagarré(e) avec un ou plusieurs élèves ?",
+      "Est-ce qu’un ou plusieurs élèves t’ont bousculé(e) volontairement ?",
+      "As-tu été agressé(e) physiquement par un ou plusieurs élèves ?",
+      "Est-ce qu’un ou plusieurs élèves t’ont volé des affaires ou ont menacé de le faire ?",
+      "As-tu participé à un jeu dangereux à la demande d’un ou plusieurs élèves ?",
+      "As-tu été embêté(e) aux toilettes ?",
+      "Est-ce qu’on a essayé de te retirer tes habits ?",
+      "As-tu reçu des messages insultants ou menaçants en ligne ?",
+      "Un ou plusieurs élèves font-ils circuler des photos ou messages sans ton accord ?",
+      "Des photos ou vidéos intimes de toi ont-elles circulé sans ton accord ?",
+      "Tes coordonnées ont-elles circulé sans ton accord ?",
+      "Es-tu victime d’insultes à caractère sexuel de la part d'un ou plusieurs élèves sur téléphone portable, sur les réseaux sociaux ou sur une plateforme de jeux en ligne ?",
+      "As-tu subi des violences à caractère sexuel (attouchements, baisers forcés, voyeurisme etc) de la part d'un ou plusieurs élèves ?"
+    ];
+    function checkPassword() {
+  const pwd = document.getElementById('passwordInput').value;
+  if (pwd === 'enseignant2024') {
+    document.getElementById('auth').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+    loadData();
+  } else {
+    document.getElementById('authError').textContent = 'Mot de passe incorrect.';
+  }
+}
+document.getElementById('validerBtn').addEventListener('click', checkPassword);
+async function loadData() {
+  const res = await fetch('/data');
+  const rows = await res.json();
+      const filterEleve = document.getElementById("filterEleve");
+      const previousEleve = filterEleve.value;
+      filterEleve.innerHTML = '<option value="">Tous</option>' + rows.map((r, i) => {
+        const label = `Élève ${i + 1} – ${r.classe} – ${r.sexe}`;
+        return `<option value="${i}">${label}</option>`;
+      }).join('');
+      filterEleve.value = previousEleve;
+
+      const filterQuestion = document.getElementById("filterQuestion");
+      if (filterQuestion.length === 0) {
+        filterQuestion.innerHTML = '<option value="">Toutes</option>';
+        questions.forEach((q, i) => {
+    const opt = document.createElement("option");
+    opt.value = i + 1; 
+    opt.textContent = q; 
+    filterQuestion.appendChild(opt);
+        });
+      }
+
+      const questionValue = filterQuestion.value;
+      const classe = document.getElementById('filterClasse').value;
+      const sexe = document.getElementById('filterSexe').value;
+      const eleveIndex = filterEleve.value;
+
+      let filtered;
+      if (eleveIndex !== "") {
+        filtered = [rows[parseInt(eleveIndex)]];
+      } else {
+        filtered = rows.filter(row =>
+          (!classe || row.classe === classe) &&
+          (!sexe || row.sexe === sexe)
+        );
+      }
+
+      const syntheseBlock = document.getElementById('synthese');
+      syntheseBlock.innerHTML = "";
+if (syntheseBlock) {
+  if (eleveIndex !== "") {
+    syntheseBlock.style.display = 'block';
+    computeTableSynthese(filtered);
+  } else {
+    syntheseBlock.style.display = 'none';
+  }
+}
+  const chartsContainer = document.getElementById("chartsContainer");
+  chartsContainer.innerHTML = ""; 
+  if (questionValue === "") {
+    for (let q = 1; q <= 34; q++) {
+    const counts = [0, 0, 0, 0];
+    filtered.forEach(row => {
+      const val = row[`q${q}`];
+      if (val && ["1", "2", "3", "4"].includes(val)) {
+        counts[parseInt(val) - 1]++;
+      }
+    });
+
+    const chartBox = document.createElement("div");
+    chartBox.classList.add("chart-box");
+    chartBox.innerHTML = `<canvas id="chartQ${q}" width="200" height="200"></canvas>`;
+    chartsContainer.appendChild(chartBox);
+    renderChart(document.getElementById(`chartQ${q}`), counts, q);
+  }
+} else {
+  const q = parseInt(questionValue);
+  const counts = [0, 0, 0, 0];
+  filtered.forEach(row => {
+    const val = row[`q${q}`];
+    if (val && ["1", "2", "3", "4"].includes(val)) {
+      counts[parseInt(val) - 1]++;
+    }
+  });
+
+  const chartBox = document.createElement("div");
+  chartBox.classList.add("chart-box");
+  chartBox.innerHTML = `<canvas id="chartQ${q}" width="300" height="300"></canvas>`;
+  chartsContainer.appendChild(chartBox);
+  renderChart(document.getElementById(`chartQ${q}`), counts, q);
+}
+}
+
+function renderChart(canvas, data, questionIndex) {
+  new Chart(canvas.getContext('2d'), {
+    type: 'pie',
+    data: {
+      labels: ['1', '2', '3', '4'],
+      datasets: [{
+         label: `Question ${questionIndex}`,
+         data: data,
+         backgroundColor: ['#66bb6a', '#ffa726', '#ef5350', '#ab47bc']
+       }]
+     },
+     options: {
+       responsive: false,
+       plugins: {
+         title: {
+           display: true,
+           text: `Question ${questionIndex}`}
+        }
+      }
+    });
+  }
+    function showSummaryBoxes(a, b, c) {
+      document.getElementById("summaryBoxes").innerHTML = `
+        <div class="summary-box">Total A<br><span>${a}</span></div>
+        <div class="summary-box">Total B<br><span>${b}</span></div>
+        <div class="summary-box">Total C<br><span>${c}</span></div>
+      `;
+    }
+
+    function getValidationMessage(totalA, totalBC) {
+      let row, col;
+
+      if (totalA === 0) row = 0;
+      else if (totalA <= 2) row = 1;
+      else if (totalA <= 5) row = 2;
+      else row = 3;
+
+      if (totalBC === 0) col = 0;
+      else if (totalBC <= 2) col = 1;
+      else if (totalBC <= 4) col = 2;
+      else col = 3;
+
+      const zoneColor = [
+    ["white", "white", "grey", "yellow"],
+    ["white", "white", "grey", "yellow"],
+    ["grey", "grey", "grey", "yellow"],
+    ["yellow", "yellow", "yellow", "yellow"]
+      ][row][col];
+
+      if (zoneColor === "white") {
+        return "🟢 Élève en situation rassurante.";
+      } else if (zoneColor === "grey") {
+        return "🟡 Élève dans une situation à surveiller.";
+      } else {
+        return "⚫ Élève en situation de harcèlement.";
+      }
+    }
+    function computeTableSynthese(rows) {
+      document.getElementById('synthese').innerHTML = "";
+
+      let totalA = 0, totalB = 0, totalC = 0;
+      rows.forEach(r => {
+        for (let i = 2; i <= 11; i++) {
+          const val = parseInt(r[`q${i}`]);
+          if (val === 3 || val === 4) totalA++;
+        }
+        for (let i = 14; i <= 30; i++) {
+          const val = parseInt(r[`q${i}`]);
+          if (val === 3 || val === 4) totalB++;
+        }
+        for (let i = 31; i <= 34; i++) {
+          const val = parseInt(r[`q${i}`]);
+          if (val === 2 || val === 3 || val === 4) totalC++;
+        }
+      });
+    const summary = document.getElementById("summaryBoxes");
+if (rows.length === 1) {
+  summary.style.display = "flex";
+  showSummaryBoxes(totalA, totalB, totalC);
+} else {
+  summary.style.display = "none";
+  }
+    const totalBC = totalB + totalC;
+    const message = getValidationMessage(totalA, totalBC);
+    let row, col;
+if (totalA === 0) row = 0;
+else if (totalA <= 2) row = 1;
+else if (totalA <= 5) row = 2;
+else row = 3;
+
+if (totalBC === 0) col = 0;
+else if (totalBC <= 2) col = 1;
+else if (totalBC <= 4) col = 2;
+else col = 3;
+    const couleurs = {
+  white: 'background-color: white;',
+  grey: 'background-color: #d3d3d3;',
+  yellow: 'background-color: #fdf5b5;'
+};
+
+let table = `<table class="synthese"><tr><th></th><th>0</th><th>1-2</th><th>3-4</th><th>5+</th></tr>`;
+
+const lignes = ["0", "1-2", "3-5", "6 ou plus"];
+const zoneColorMatrix = [
+  ["white", "white", "grey", "yellow"],
+  ["white", "white", "grey", "yellow"],
+  ["grey", "grey", "grey", "yellow"],
+  ["yellow", "yellow", "yellow", "yellow"]
+];
+
+for (let i = 0; i < 4; i++) {
+  table += `<tr><th>${lignes[i]}</th>`;
+  for (let j = 0; j < 4; j++) {
+    const color = zoneColorMatrix[i][j];
+    const highlight = (i === row && j === col) ? 'border: 3px solid red; font-weight: bold;' : '';
+    const check = (i === row && j === col) ? '✔️' : '';
+    table += `<td style="${couleurs[color]} ${highlight} width: 60px; height: 30px;">${check}</td>`;
+  }
+  table += `</tr>`;
+}
+table += `</table>`;
+
+document.getElementById('synthese').insertAdjacentHTML('beforeend', table);
+document.getElementById('synthese').insertAdjacentHTML('beforeend', `<p style="text-align: center;"><strong>${message}</strong></p>`);
+    }
+
+    document.getElementById("filterClasse").addEventListener("change", loadData);
+    document.getElementById("filterSexe").addEventListener("change", loadData);
+    document.getElementById("filterQuestion").addEventListener("change", loadData);
+    document.getElementById("filterEleve").addEventListener("change", loadData);
+
+function exportCSV() {
+  fetch('/data')
+    .then(response => response.json())
+    .then(rows => {
+      if (!rows || rows.length === 0) return alert("Aucune donnée à exporter.");
+      
+      const headers = ["classe", "sexe", "annee"];
+for (let i = 1; i <= 34; i++) {
+  headers.push(`q${i}`);
+}
+      const csv = [headers.join(",")].concat(rows.map(r => headers.map(h => `"${r[h]}"`).join(","))).join("\n");
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "donnees.csv";
+      link.click();
+      URL.revokeObjectURL(url);
+    });
+}
+function exportFilteredCSV() {
+  fetch('/data')
+    .then(response => response.json())
+    .then(rows => {
+      const classe = document.getElementById('filterClasse').value;
+      const sexe = document.getElementById('filterSexe').value;
+      const eleveIndex = document.getElementById('filterEleve').value;
+
+      let filtered;
+      if (eleveIndex !== "") {
+        filtered = [rows[parseInt(eleveIndex)]];
+      } else {
+        filtered = rows.filter(row =>
+          (!classe || row.classe === classe) &&
+          (!sexe || row.sexe === sexe)
+        );
+      }
+
+      if (!filtered || filtered.length === 0) {
+        alert("Aucune donnée filtrée à exporter.");
+        return;
+      }
+
+     const headers = ["classe", "sexe", "annee"];
+for (let i = 1; i <= 34; i++) {
+  headers.push(`q${i}`);
+}
+      const csv = [headers.join(",")].concat(filtered.map(r =>
+        headers.map(h => `"${r[h]}"`).join(",")
+      )).join("\n");
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "reponses_filtrees.csv";
+      link.click();
+      URL.revokeObjectURL(url);
+    });
+}
+  </script>
+</body>
+</html>
