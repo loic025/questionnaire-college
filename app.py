@@ -40,10 +40,16 @@ def submit():
 # --- Route pour lire les données (analyse) ---
 @app.route('/data')
 def data():
-    if not os.path.exists(DATA_FILE):
+    if not os.path.exists(DATA_FILE) or os.path.getsize(DATA_FILE) == 0:
         return jsonify([])
+try:
     with open(DATA_FILE, newline='', encoding='utf-8') as f:
-        return jsonify(list(csv.DictReader(f)))
+            reader = csv.DictReader(f)
+            data = list(reader)
+        return jsonify(data)
+    except Exception as e:
+        print("Erreur lecture CSV :", e)
+        return jsonify([]), 500
 
 # 🧹 Route protégée pour réinitialiser le fichier CSV
 @app.route('/reset', methods=['POST'])
