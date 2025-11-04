@@ -153,6 +153,8 @@
       formData.forEach((value, key) => {
         data[key] = value;
       });
+        const nomEleve = document.getElementById("nomEleve").value.trim();
+  data.nomEleve = nomEleve || "Anonyme";
       await fetch('/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
