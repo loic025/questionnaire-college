@@ -3,6 +3,7 @@ import csv, os
 
 app = Flask(__name__)
 DATA_FILE = 'donnees.csv'
+RESET_PASSWORD = "enseignant2024"  # mot de passe enseignant pour réinitialisation
 
 # --- Routes principales ---
 
@@ -44,7 +45,19 @@ def data():
     with open(DATA_FILE, newline='', encoding='utf-8') as f:
         return jsonify(list(csv.DictReader(f)))
 
-
+# 🧹 Route protégée pour réinitialiser le fichier CSV
+@app.route('/reset', methods=['POST'])
+def reset_data():
+    req = request.get_json()
+    pwd = req.get("password", "")
+    if pwd != RESET_PASSWORD:
+        return jsonify({"status": "error", "message": "Mot de passe incorrect."}), 403
+    with open(DATA_FILE, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        fieldnames = ['nomEleve', 'classe', 'sexe', 'annee'] + [f'q{i}' for i in range(1, 35)]
+        writer.writerow(fieldnames)
+    return jsonify({"status": "ok", "message": "Toutes les données ont été effacées."})
+    
 # --- Route pour le logo (dans le dossier static) ---
 @app.route('/static/<path:filename>')
 def static_files(filename):
