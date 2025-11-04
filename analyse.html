@@ -70,6 +70,7 @@
       <button onclick="exportCSV()">📥 Exporter toutes les réponses</button>
       <button onclick="exportFilteredCSV()">🎯 Exporter réponses filtrées</button>
       <button onclick="window.print()">📄 Exporter en PDF</button>
+      <button id="resetButton" onclick="resetData()">🗑 Réinitialiser les données</button>
     </div>
 
     <div class="filters">
@@ -152,6 +153,23 @@
   }
 }
 document.getElementById('validerBtn').addEventListener('click', checkPassword);
+    async function resetData() {
+      if (!confirm("⚠️ Es-tu sûr(e) de vouloir effacer TOUTES les données du fichier ?")) return;
+
+      const response = await fetch("/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: PASSWORD })
+      });
+
+      const result = await response.json();
+      if (result.status === "ok") {
+        alert("✅ Les données ont été effacées avec succès !");
+        loadData();
+      } else {
+        alert("❌ Erreur : " + (result.message || "Impossible de réinitialiser."));
+      }
+    }
 async function loadData() {
   const res = await fetch('/data');
   const rows = await res.json();
