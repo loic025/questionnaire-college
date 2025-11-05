@@ -21,22 +21,30 @@ def analyse():
 @app.route('/submit', methods=['POST'])
 def submit():
     data = request.get_json() or {}
+    print(f"[SUBMIT] reçu {len(data)} champs")
 
-    # Schéma de colonnes stable (ajout du nom/prénom facultatif)
+    # Colonnes fixes pour tous les enregistrements
     fieldnames = ['nomEleve', 'classe', 'sexe', 'annee'] + [f"q{i}" for i in range(1, 35)]
 
-    file_exists = os.path.exists(DATA_FILE)
+    # Si le fichier est vide ou inexistant → on recrée avec l’en-tête
+    write_header = not os.path.exists(DATA_FILE) or os.path.getsize(DATA_FILE) == 0
 
-    # Normalise la ligne aux colonnes prévues (valeurs manquantes -> '')
+    # Normaliser la ligne (valeurs manquantes = '')
     row = {k: data.get(k, '') for k in fieldnames}
 
-    with open(DATA_FILE, 'a', newline='', encoding='utf-8') as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        if not file_exists:
-            writer.writeheader()
-        writer.writerow(row)
+    try:
+        with open(DATA_FILE, 'a', newline='', encoding='utf-8') as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            if write_header:
+                print("[SUBMIT] écriture de l’en-tête CSV")
+                writer.writeheader()
+            writer.writerow(row)
 
-    return jsonify({'status': 'ok'})
+        print("[SUBMIT] ligne ajoutée avec succès")
+        return jsonify({'status': 'ok'})
+    except Exception as e:
+        print(f"[SUBMIT][ERROR] {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
 @app.route('/data')
