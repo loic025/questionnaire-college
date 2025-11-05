@@ -255,8 +255,8 @@ if (syntheseBlock) {
     });
 
   if (q >= 35 && q <= 44) {
-    const oui = filtered.filter(row => row[`q${q}`] === "Oui").length;
-    const non = filtered.filter(row => row[`q${q}`] === "Non").length;
+    const oui = filtered.filter(row => row[`q${q}`].toLowerCase() === "oui").length;
+    const non = filtered.filter(row => row[`q${q}`].toLowerCase() === "non").length;
     
     const chartBox = document.createElement("div");
         chartBox.classList.add("chart-box");
