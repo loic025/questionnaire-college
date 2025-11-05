@@ -77,10 +77,18 @@
       <label>Classe :
         <select id="filterClasse">
           <option value="">Toutes</option>
-          <option>6e</option>
-          <option>5e</option>
-          <option>4e</option>
-          <option>3e</option>
+          <option>6e1</option>
+          <option>6e2</option>
+          <option>6e3</option>
+          <option>5e1</option>
+          <option>5e2</option>
+          <option>5e3</option>
+          <option>4e1</option>
+          <option>4e2</option>
+          <option>4e3</option>
+          <option>3e1</option>
+          <option>3e2</option>
+          <option>3PM</option>
         </select>
       </label>
       <label>Sexe :
@@ -106,7 +114,24 @@
 
 
   <script>
-    const questions = [
+    let allData = [];
+    const yesNoQuestions = Array.from({length: 10}, (_, i) => 35 + i); // q35 à q44
+
+    async function loadData() {
+      const res = await fetch("/data");
+      allData = await res.json();
+      renderCharts(allData);
+    }
+
+    function renderCharts(data) {
+      const container = document.getElementById("chartsContainer");
+      container.innerHTML = "";
+
+      if (!data.length) {
+        container.innerHTML = "<p>Aucune donnée disponible.</p>";
+        return;
+      }
+    const questionLabels = [
       "As-tu peur sur le trajet du collège à cause d’un ou plusieurs élèves ?",
       "As-tu peur d’aller au collège à cause d’un ou plusieurs élèves ?",
       "As-tu menti pour rester chez toi par peur de retrouver un ou plusieurs élèves au collège ?",
@@ -140,7 +165,17 @@
       "Des photos ou vidéos intimes de toi ont-elles circulé sans ton accord ?",
       "Tes coordonnées ont-elles circulé sans ton accord ?",
       "Es-tu victime d’insultes à caractère sexuel de la part d'un ou plusieurs élèves sur téléphone portable, sur les réseaux sociaux ou sur une plateforme de jeux en ligne ?",
-      "As-tu subi des violences à caractère sexuel (attouchements, baisers forcés, voyeurisme etc) de la part d'un ou plusieurs élèves ?"
+      "As-tu subi des violences à caractère sexuel (attouchements, baisers forcés, voyeurisme etc) de la part d'un ou plusieurs élèves ?",
+      "Est-ce toujours par le ou les mêmes élèves ?",
+      "As-tu déjà demandé de l'aide à un(e) autre élève ?",
+      "As-tu déjà demandé de l'aide à tes parents ?",
+      "As-tu déjà demandé de l'aide à un personnel éducatif ?",
+      "As-tu au moins un(e) ami(e) dans ton établissement ?",
+      "Connais-tu le numéro de téléphone contre le harcèlement 3018 ?",
+      "Si oui, as-tu déjà appelé ou as-tu eu l'intention de le faire ?",
+      "As-tu déjà, avec d'autres élèves, embêté un(e) autre élève en te moquant de lui ou d'elle, en répétant des rumeurs à son sujet, en le ou la bousculant ou en le ou la mettant à l'écart ?",
+      "Connais-tu un(e) élève harcélé(e) dans ton établissement ?",
+      "Connais-tu un(e) élève harcelé(e) dans ta classe ?
     ];
     function checkPassword() {
   const pwd = document.getElementById('passwordInput').value;
@@ -221,7 +256,7 @@ if (syntheseBlock) {
   const chartsContainer = document.getElementById("chartsContainer");
   chartsContainer.innerHTML = ""; 
   if (questionValue === "") {
-    for (let q = 1; q <= 34; q++) {
+    for (let q = 1; q <= 44; q++) {
     const counts = [0, 0, 0, 0];
     filtered.forEach(row => {
       const val = row[`q${q}`];
@@ -230,6 +265,33 @@ if (syntheseBlock) {
       }
     });
 
+  if (q >= 35 && q <= 44) {
+    const oui = filtered.filter(row => row[`q${q}`] === "Oui").length;
+    const non = filtered.filter(row => row[`q${q}`] === "Non").length;
+    
+    const chartBox = document.createElement("div");
+        chartBox.classList.add("chart-box");
+        chartBox.innerHTML = `<canvas id="chartQ${q}" width="200" height="200"></canvas>`;
+        chartsContainer.appendChild(chartBox);
+
+        new Chart(document.getElementById(`chartQ${q}`).getContext("2d"), {
+          type: "pie",
+          data: {
+            labels: ["Oui", "Non"],
+            datasets: [{
+              data: [oui, non],
+              backgroundColor: ["#4CAF50", "#F44336"]
+            }]
+          },
+          options: {
+            plugins: {
+              title: { display: true, text: `Question ${q}` },
+              legend: { position: "bottom" }
+            }
+          }
+        });
+        continue;
+      }
     const chartBox = document.createElement("div");
     chartBox.classList.add("chart-box");
     chartBox.innerHTML = `<canvas id="chartQ${q}" width="200" height="200"></canvas>`;
@@ -392,7 +454,7 @@ function exportCSV() {
       if (!rows || rows.length === 0) return alert("Aucune donnée à exporter.");
       
       const headers = ["nomEleve", "classe", "sexe", "annee"];
-for (let i = 1; i <= 34; i++) {
+for (let i = 1; i <= 44; i++) {
   headers.push(`q${i}`);
 }
       const csv = [headers.join(",")].concat(rows.map(r => headers.map(h => `"${r[h]}"`).join(","))).join("\n");
@@ -430,7 +492,7 @@ function exportFilteredCSV() {
       }
 
      const headers = ["nomEleve", "classe", "sexe", "annee"];
-for (let i = 1; i <= 34; i++) {
+for (let i = 1; i <= 44; i++) {
   headers.push(`q${i}`);
 }
       const csv = [headers.join(",")].concat(filtered.map(r =>
