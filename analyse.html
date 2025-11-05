@@ -209,7 +209,7 @@ async function loadData() {
       const filterQuestion = document.getElementById("filterQuestion");
       if (filterQuestion.length === 0) {
         filterQuestion.innerHTML = '<option value="">Toutes</option>';
-        questions.forEach((q, i) => {
+        questionLabels.forEach((q, i) => {
     const opt = document.createElement("option");
     opt.value = i + 1; 
     opt.textContent = q; 
