@@ -177,17 +177,6 @@
       "Connais-tu un(e) élève harcélé(e) dans ton établissement ?",
       "Connais-tu un(e) élève harcelé(e) dans ta classe ?"
     ];
-    function checkPassword() {
-  const pwd = document.getElementById('passwordInput').value;
-  if (pwd === 'enseignant2024') {
-    document.getElementById('auth').style.display = 'none';
-    document.getElementById('content').style.display = 'block';
-    loadData();
-  } else {
-    document.getElementById('authError').textContent = 'Mot de passe incorrect.';
-  }
-}
-document.getElementById('validerBtn').addEventListener('click', checkPassword);
     async function resetData() {
       if (!confirm("⚠️ Es-tu sûr(e) de vouloir effacer TOUTES les données du fichier ?")) return;
 
@@ -521,6 +510,17 @@ for (let i = 1; i <= 44; i++) {
   alert(data.message);
   if (data.status === "ok") location.reload();
 }
+  function checkPassword() {
+  const pwd = document.getElementById('passwordInput').value;
+  if (pwd === 'enseignant2024') {
+    document.getElementById('auth').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+    loadData();
+  } else {
+    document.getElementById('authError').textContent = 'Mot de passe incorrect.';
+  }
+}
+document.getElementById('validerBtn').addEventListener('click', checkPassword);  
 </script>
 </body>
 </html>
