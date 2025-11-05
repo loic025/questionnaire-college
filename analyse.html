@@ -117,12 +117,6 @@
     let allData = [];
     const yesNoQuestions = Array.from({length: 10}, (_, i) => 35 + i); // q35 à q44
 
-    async function loadData() {
-      const res = await fetch("/data");
-      allData = await res.json();
-      renderCharts(allData);
-    }
-
     function renderCharts(data) {
       const container = document.getElementById("chartsContainer");
       container.innerHTML = "";
@@ -292,7 +286,10 @@ if (syntheseBlock) {
       chartsContainer.appendChild(chartBox);
       renderChart(document.getElementById(`chartQ${q}`), counts, q);
     }
-  }
+    }
+    }
+      renderCharts(filtered);
+}
    else {
   const q = parseInt(questionValue);
   const counts = [0, 0, 0, 0];
