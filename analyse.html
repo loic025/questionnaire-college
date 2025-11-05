@@ -246,19 +246,13 @@ if (syntheseBlock) {
   chartsContainer.innerHTML = ""; 
   if (questionValue === "") {
     for (let q = 1; q <= 44; q++) {
-    const counts = [0, 0, 0, 0];
-    filtered.forEach(row => {
-      const val = row[`q${q}`];
-      if (val && ["1", "2", "3", "4"].includes(val)) {
-        counts[parseInt(val) - 1]++;
-      }
-    });
 
-  if (q >= 35 && q <= 44) {
-    const oui = filtered.filter(row => row[`q${q}`].toLowerCase() === "oui").length;
-    const non = filtered.filter(row => row[`q${q}`].toLowerCase() === "non").length;
-    
-    const chartBox = document.createElement("div");
+      // 🔹 Cas 1 : Questions Oui / Non (35 à 44)
+      if (q >= 35 && q <= 44) {
+        const oui = filtered.filter(row => (row[`q${q}`] || "").toLowerCase() === "oui").length;
+        const non = filtered.filter(row => (row[`q${q}`] || "").toLowerCase() === "non").length;
+
+        const chartBox = document.createElement("div");
         chartBox.classList.add("chart-box");
         chartBox.innerHTML = `<canvas id="chartQ${q}" width="200" height="200"></canvas>`;
         chartsContainer.appendChild(chartBox);
@@ -279,15 +273,27 @@ if (syntheseBlock) {
             }
           }
         });
-        continue;
+
+        continue; // on passe à la question suivante
       }
-    const chartBox = document.createElement("div");
-    chartBox.classList.add("chart-box");
-    chartBox.innerHTML = `<canvas id="chartQ${q}" width="200" height="200"></canvas>`;
-    chartsContainer.appendChild(chartBox);
-    renderChart(document.getElementById(`chartQ${q}`), counts, q);
+
+      // 🔹 Cas 2 : Questions à 4 choix (1 à 34)
+      const counts = [0, 0, 0, 0];
+      filtered.forEach(row => {
+        const val = row[`q${q}`];
+        if (val && ["1", "2", "3", "4"].includes(val)) {
+          counts[parseInt(val) - 1]++;
+        }
+      });
+
+      const chartBox = document.createElement("div");
+      chartBox.classList.add("chart-box");
+      chartBox.innerHTML = `<canvas id="chartQ${q}" width="200" height="200"></canvas>`;
+      chartsContainer.appendChild(chartBox);
+      renderChart(document.getElementById(`chartQ${q}`), counts, q);
+    }
   }
-} else {
+   else {
   const q = parseInt(questionValue);
   const counts = [0, 0, 0, 0];
   filtered.forEach(row => {
