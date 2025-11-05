@@ -176,7 +176,8 @@ async function loadData() {
       const filterEleve = document.getElementById("filterEleve");
       const previousEleve = filterEleve.value;
       filterEleve.innerHTML = '<option value="">Tous</option>' + rows.map((r, i) => {
-        const label = `Élève ${i + 1} – ${r.classe} – ${r.sexe}`;
+        const nom = r.nomEleve && r.nomEleve.trim() !== "" ? r.nomEleve : `Élève ${i + 1}`;
+        const label = `${nom} – ${r.classe} – ${r.sexe}`;
         return `<option value="${i}">${label}</option>`;
       }).join('');
       filterEleve.value = previousEleve;
@@ -390,7 +391,7 @@ function exportCSV() {
     .then(rows => {
       if (!rows || rows.length === 0) return alert("Aucune donnée à exporter.");
       
-      const headers = ["classe", "sexe", "annee"];
+      const headers = ["nomEleve", "classe", "sexe", "annee"];
 for (let i = 1; i <= 34; i++) {
   headers.push(`q${i}`);
 }
@@ -428,7 +429,7 @@ function exportFilteredCSV() {
         return;
       }
 
-     const headers = ["classe", "sexe", "annee"];
+     const headers = ["nomEleve", "classe", "sexe", "annee"];
 for (let i = 1; i <= 34; i++) {
   headers.push(`q${i}`);
 }
