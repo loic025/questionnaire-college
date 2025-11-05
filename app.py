@@ -24,7 +24,7 @@ def submit():
     print(f"[SUBMIT] reçu {len(data)} champs")
 
     # Colonnes fixes pour tous les enregistrements
-    fieldnames = ['nomEleve', 'classe', 'sexe', 'annee'] + [f"q{i}" for i in range(1, 35)]
+    fieldnames = ['nomEleve', 'classe', 'sexe', 'annee'] + [f"q{i}" for i in range(1, 45)]
 
     # Si le fichier est vide ou inexistant → on recrée avec l’en-tête
     write_header = not os.path.exists(DATA_FILE) or os.path.getsize(DATA_FILE) == 0
