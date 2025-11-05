@@ -116,7 +116,19 @@
   "Des photos ou vidéos intimes de toi ont-elles circulé sans ton accord ?",
   "Tes coordonnées ont-elles circulé sans ton accord ?",
   "Es-tu victime d’insultes à caractère sexuel ?",
-  "As-tu subi des violences à caractère sexuel ?"
+  "As-tu subi des violences à caractère sexuel ?",
+  // Nouveau bloc Oui/Non :
+  "Est-ce toujours par le ou les mêmes élèves ?",
+  "As-tu déjà demandé de l'aide à un(e) autre élève ?",
+  "As-tu déjà demandé de l'aide à tes parents ?",
+  "As-tu déjà demandé de l'aide à un personnel éducatif ?",
+  // Nouveau bloc Oui/Non :
+  "As-tu au moins un(e) ami(e) dans ton établissement ?",
+  "Connais-tu le numéro de téléphone contre le harcèlement 3018 ?",
+  "Si oui, as-tu déjà appelé ou as-tu eu l'intention de le faire ?",
+  "As-tu déjà, avec d'autres élèves, embêté un(e) autre élève en te moquant de lui ou d'elle, en répétant des rumeurs à son sujet, en le ou la bousculant ou en le ou la mettant à l'écart ?",
+  "Connais-tu un(e) élève harcélé(e) dans ton établissement ?",
+  "Connais-tu un(e) élève harcelé(e) dans ta classe ?
 ];
     function startQuestionnaire() {
       document.getElementById('welcome').style.display = 'none';
@@ -124,6 +136,11 @@
     }
     function renderQuestions() {
       const container = document.getElementById('questions');
+      container.innerHTML = "";
+      // Questions Oui/Non : les 4 dernières
+      const yesNoOptional = [35, 36, 37, 38];
+      const yesNoRequired = [39, 40, 41, 42, 43, 44];
+      
       questionsText.forEach((question, index) => {
         if (index === 0) {
           const sub1 = document.createElement('div');
@@ -135,6 +152,16 @@
           sub2.className = 'subgroup-title';
           sub2.textContent = "Comment cela se passe-t-il avec les autres élèves ?";
           container.appendChild(sub2);
+          } else if (index === 34) {
+          const sub3 = document.createElement('div');
+          sub3.className = 'subgroup-title';
+          sub3.textContent = "Si tu as l’impression d’être embêté(e) souvent dans ton établissement scolaire ou sur Internet :";
+          container.appendChild(sub3);
+          } else if (index === 38) {
+          const sub4 = document.createElement('div');
+          sub4.className = 'subgroup-title';
+          sub4.textContent = "Pour en savoir plus :";
+          container.appendChild(sub4);
         }
         const div = document.createElement('div');
         div.className = 'question';
@@ -143,6 +170,20 @@
         div.appendChild(label);
         const responses = document.createElement('div');
         responses.className = 'responses';
+
+        if (yesNoOptional.includes(index + 1) || yesNoRequired.includes(index + 1)) {
+          ["Oui", "Non"].forEach(val => {
+            const input = document.createElement('input');
+            input.type = 'radio';
+            input.name = `q${index + 1}`;
+            input.value = val;
+            if (yesNoRequired.includes(index + 1)) input.required = true;
+            const lbl = document.createElement('label');
+            lbl.textContent = val;
+            lbl.prepend(input);
+            responses.appendChild(lbl);
+          });
+        } else {
         for (let i = 1; i <= 4; i++) {
           const input = document.createElement('input');
           input.type = 'radio';
@@ -154,6 +195,7 @@
           lbl.prepend(input);
           responses.appendChild(lbl);
         }
+      }
         div.appendChild(responses);
         container.appendChild(div);
       });
