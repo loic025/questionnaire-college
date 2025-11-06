@@ -236,79 +236,11 @@ if (syntheseBlock) {
     syntheseBlock.style.display = 'none';
   }
 }
-  const chartsContainer = document.getElementById("chartsContainer");
-  chartsContainer.innerHTML = ""; 
-  if (questionValue === "") {
-    for (let q = 1; q <= 44; q++) {
-
-      // 🔹 Cas 1 : Questions Oui / Non (35 à 44)
-      if (q >= 35 && q <= 44) {
-        const oui = filtered.filter(row => (row[`q${q}`] || "").toLowerCase() === "oui").length;
-        const non = filtered.filter(row => (row[`q${q}`] || "").toLowerCase() === "non").length;
-
-        const chartBox = document.createElement("div");
-        chartBox.classList.add("chart-box");
-        chartBox.innerHTML = `<canvas id="chartQ${q}" width="200" height="200"></canvas>`;
-        chartsContainer.appendChild(chartBox);
-
-        new Chart(document.getElementById(`chartQ${q}`).getContext("2d"), {
-          type: "pie",
-          data: {
-            labels: ["Oui", "Non"],
-            datasets: [{
-              data: [oui, non],
-              backgroundColor: ["#4CAF50", "#F44336"]
-            }]
-          },
-          options: {
-            plugins: {
-              title: { display: true, text: `Question ${q}` },
-              legend: { position: "bottom" }
-            }
-          }
-        });
-
-        continue; // on passe à la question suivante
-      }
-
-      // 🔹 Cas 2 : Questions à 4 choix (1 à 34)
-      const counts = [0, 0, 0, 0];
-      filtered.forEach(row => {
-        const val = row[`q${q}`];
-        if (val && ["1", "2", "3", "4"].includes(val)) {
-          counts[parseInt(val) - 1]++;
-        }
-      });
-
-      const chartBox = document.createElement("div");
-      chartBox.classList.add("chart-box");
-      chartBox.innerHTML = `<canvas id="chartQ${q}" width="200" height="200"></canvas>`;
-      chartsContainer.appendChild(chartBox);
-      renderChart(document.getElementById(`chartQ${q}`), counts, q);
-    }
-    }
-    }
-      renderCharts(filtered);
-}
-   else {
-  const q = parseInt(questionValue);
-  const counts = [0, 0, 0, 0];
-  filtered.forEach(row => {
-    const val = row[`q${q}`];
-    if (val && ["1", "2", "3", "4"].includes(val)) {
-      counts[parseInt(val) - 1]++;
-    }
-  });
-
-  const chartBox = document.createElement("div");
-  chartBox.classList.add("chart-box");
-  chartBox.innerHTML = `<canvas id="chartQ${q}" width="300" height="300"></canvas>`;
-  chartsContainer.appendChild(chartBox);
-  renderChart(document.getElementById(`chartQ${q}`), counts, q);
-}
-}
-}
-
+  
+  // ✅ Ajout clé : affichage des graphiques
+  renderCharts(filtered);
+  }
+  
 function renderChart(canvas, data, questionIndex) {
   new Chart(canvas.getContext('2d'), {
     type: 'pie',
