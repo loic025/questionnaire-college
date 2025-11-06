@@ -117,15 +117,7 @@
     let allData = [];
     const yesNoQuestions = Array.from({length: 10}, (_, i) => 35 + i); // q35 à q44
 
-    function renderCharts(data) {
-      const container = document.getElementById("chartsContainer");
-      container.innerHTML = "";
-
-      if (!data.length) {
-        container.innerHTML = "<p>Aucune donnée disponible.</p>";
-        return;
-      }
-    const questionLabels = [
+     const questionLabels = [
       "As-tu peur sur le trajet du collège à cause d’un ou plusieurs élèves ?",
       "As-tu peur d’aller au collège à cause d’un ou plusieurs élèves ?",
       "As-tu menti pour rester chez toi par peur de retrouver un ou plusieurs élèves au collège ?",
@@ -171,6 +163,15 @@
       "Connais-tu un(e) élève harcélé(e) dans ton établissement ?",
       "Connais-tu un(e) élève harcelé(e) dans ta classe ?"
     ];
+    
+    function renderCharts(data) {
+      const container = document.getElementById("chartsContainer");
+      container.innerHTML = "";
+
+      if (!data.length) {
+        container.innerHTML = "<p>Aucune donnée disponible.</p>";
+        return;
+      }
   }
     async function resetData() {
       if (!confirm("⚠️ Es-tu sûr(e) de vouloir effacer TOUTES les données du fichier ?")) return;
