@@ -1,6 +1,6 @@
 import os
 import json
-from flask import Flask, render_template, request, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
