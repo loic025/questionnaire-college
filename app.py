@@ -67,7 +67,7 @@ def submit():
         for i in range(1, 45):
             row.append(data.get(f"q{i}", ""))
 
-        worksheet.append_row(row, value_input_option="USER_ENTERED")
+        worksheet.append_row(row, value_input_option="RAW")
         print("[SUBMIT] ✅ ligne ajoutée dans Google Sheets")
         return jsonify({"status": "ok"})
     except Exception as e:
