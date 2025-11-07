@@ -1,83 +1,97 @@
-from flask import Flask, request, jsonify, send_from_directory
-import csv, os
+import os
+import json
+from flask import Flask, render_template, request, jsonify
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 
-app = Flask(__name__, static_folder='static')
+app = Flask(__name__)
 
-DATA_FILE = 'donnees.csv'
-# Tu peux aussi définir ce mot de passe dans Render (Environment Variables) sous RESET_PASSWORD
-RESET_PASSWORD = os.environ.get('RESET_PASSWORD', 'enseignant2024')
+# 🔹 Charger les variables d’environnement Render
+GOOGLE_CREDS_JSON = os.getenv("GOOGLE_CREDS_JSON")
+SHEET_ID = os.getenv("SHEET_ID")
+RESET_PASSWORD = os.getenv("RESET_PASSWORD", "enseignant2024")
 
+# 🔹 Connexion à Google Sheets
+def get_gsheet():
+    if not GOOGLE_CREDS_JSON or not SHEET_ID:
+        print("❌ Variables d’environnement manquantes")
+        return None
 
-@app.route('/')
+    creds_dict = json.loads(GOOGLE_CREDS_JSON)
+    scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+    creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+    client = gspread.authorize(creds)
+    return client.open_by_key(SHEET_ID).sheet1  # première feuille du document
+
+@app.route("/")
 def index():
-    return send_from_directory('.', 'index.html')
+    return render_template("index.html")
 
-
-@app.route('/analyse')
+@app.route("/analyse")
 def analyse():
-    return send_from_directory('.', 'analyse.html')
+    return render_template("analyse.html")
 
-
-@app.route('/submit', methods=['POST'])
+@app.route("/submit", methods=["POST"])
 def submit():
-    data = request.get_json() or {}
+    data = request.get_json()
+    if not data:
+        return jsonify({"status": "error", "message": "Aucune donnée reçue"}), 400
+
     print(f"[SUBMIT] reçu {len(data)} champs")
 
-    # Colonnes fixes pour tous les enregistrements
-    fieldnames = ['nomEleve', 'classe', 'sexe', 'annee'] + [f"q{i}" for i in range(1, 45)]
-
-    # Si le fichier est vide ou inexistant → on recrée avec l’en-tête
-    write_header = not os.path.exists(DATA_FILE) or os.path.getsize(DATA_FILE) == 0
-
-    # Normaliser la ligne (valeurs manquantes = '')
-    row = {k: data.get(k, '') for k in fieldnames}
+    # 🔹 Connexion à la feuille
+    sheet = get_gsheet()
+    if not sheet:
+        return jsonify({"status": "error", "message": "Google Sheets non configuré"}), 500
 
     try:
-        with open(DATA_FILE, 'a', newline='', encoding='utf-8') as f:
-            writer = csv.DictWriter(f, fieldnames=fieldnames)
-            if write_header:
-                print("[SUBMIT] écriture de l’en-tête CSV")
-                writer.writeheader()
-            writer.writerow(row)
+        # Vérifie si la première ligne (en-tête) existe déjà
+        headers = sheet.row_values(1)
+        if not headers:
+            headers = ["nomEleve", "classe", "sexe", "annee"] + [f"q{i}" for i in range(1, 45)]
+            sheet.append_row(headers)
+
+        # Crée une nouvelle ligne à partir des données reçues
+        row = [data.get("nomEleve", ""), data.get("classe", ""), data.get("sexe", ""), data.get("annee", "")]
+        for i in range(1, 45):
+            row.append(data.get(f"q{i}", ""))
+        sheet.append_row(row)
 
         print("[SUBMIT] ligne ajoutée avec succès")
-        return jsonify({'status': 'ok'})
+        return jsonify({"status": "ok"})
+
     except Exception as e:
-        print(f"[SUBMIT][ERROR] {e}")
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+        print(f"[ERREUR Google Sheets] {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
 
-
-@app.route('/data')
-def data():
-    if not os.path.exists(DATA_FILE):
+@app.route("/data")
+def get_data():
+    sheet = get_gsheet()
+    if not sheet:
         return jsonify([])
-    with open(DATA_FILE, newline='', encoding='utf-8') as f:
-        reader = csv.DictReader(f)
-        return jsonify(list(reader))
 
+    try:
+        records = sheet.get_all_records()
+        return jsonify(records)
+    except Exception as e:
+        print(f"[ERREUR get_data] {e}")
+        return jsonify([])
 
-@app.route('/reset', methods=['POST'])
-def reset():
-    payload = request.get_json() or {}
-    pwd = payload.get('password', '')
-    if pwd != RESET_PASSWORD:
-        return jsonify({'status': 'error', 'message': 'Mot de passe incorrect.'}), 403
+@app.route("/reset", methods=["POST"])
+def reset_data():
+    data = request.get_json()
+    if data.get("password") != RESET_PASSWORD:
+        return jsonify({"status": "error", "message": "Mot de passe incorrect"})
 
-    # Réinitialise le fichier (on supprime pour repartir propre, l’en-tête sera réécrit au prochain submit)
-    if os.path.exists(DATA_FILE):
-        os.remove(DATA_FILE)
+    try:
+        sheet = get_gsheet()
+        if sheet:
+            sheet.clear()
+        return jsonify({"status": "ok", "message": "Toutes les données ont été effacées."})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
 
-    return jsonify({'status': 'ok', 'message': 'Fichier réinitialisé.'})
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
 
-
-# Route statique pour le logo etc.
-@app.route('/static/<path:filename>')
-def static_files(filename):
-    return send_from_directory('static', filename)
-
-
-if __name__ == '__main__':
-    import os
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
 
