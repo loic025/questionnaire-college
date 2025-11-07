@@ -2,3 +2,4 @@ flask
 pandas
 gunicorn
 gspread
+oauth2client
