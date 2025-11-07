@@ -1,6 +1,6 @@
 import os
 import json
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, send_from_directory
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
@@ -25,11 +25,11 @@ def get_gsheet():
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return send_from_directory('.', 'index.html')
 
 @app.route("/analyse")
 def analyse():
-    return render_template("analyse.html")
+    return send_from_directory('.', 'analyse.html')
 
 @app.route("/submit", methods=["POST"])
 def submit():
