@@ -177,8 +177,8 @@
 
     // 🟢 Cas 1 : Questions Oui / Non (35 à 44)
     if (q >= 35 && q <= 44) {
-      const oui = data.filter(row => (row[`q${q}`] || "").toLowerCase() === "oui").length;
-      const non = data.filter(row => (row[`q${q}`] || "").toLowerCase() === "non").length;
+      const oui = filtered.filter(row => (row[`q${q}`] || "").toString().toLowerCase() === "oui").length;
+      const non = filtered.filter(row => (row[`q${q}`] || "").toString().toLowerCase() === "non").length;
 
       const chartBox = document.createElement("div");
       chartBox.classList.add("chart-box");
@@ -207,10 +207,10 @@
     // 🔵 Cas 2 : Questions à 4 choix (1 à 34)
     const counts = [0, 0, 0, 0];
     data.forEach(row => {
-      const val = row[`q${q}`];
-      if (val && ["1", "2", "3", "4"].includes(val)) {
-        counts[parseInt(val) - 1]++;
-      }
+      const val = (row[`q${q}`] || "").toString().trim();
+if (["1", "2", "3", "4"].includes(val)) {
+  counts[parseInt(val) - 1]++;
+}
     });
 
     const chartBox = document.createElement("div");
