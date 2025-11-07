@@ -33,45 +33,71 @@ def analyse():
 
 @app.route("/submit", methods=["POST"])
 def submit():
-    data = request.get_json()
-    if not data:
-        return jsonify({"status": "error", "message": "Aucune donnée reçue"}), 400
+    from google.oauth2.service_account import Credentials
+    import json
+    import os
+    import gspread
 
+    data = request.get_json() or {}
     print(f"[SUBMIT] reçu {len(data)} champs")
 
-    # 🔹 Connexion à la feuille
-    sheet = get_gsheet()
-    if not sheet:
-        return jsonify({"status": "error", "message": "Google Sheets non configuré"}), 500
+    creds_json = os.environ.get("GOOGLE_CREDS_JSON")
+    sheet_id = os.environ.get("SHEET_ID")
+
+    if not creds_json or not sheet_id:
+        return jsonify({"status": "error", "message": "Configuration Google Sheets manquante."}), 500
+
+    creds = Credentials.from_service_account_info(json.loads(creds_json), scopes=[
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive"
+    ])
+    gc = gspread.authorize(creds)
+    sh = gc.open_by_key(sheet_id)
+    worksheet = sh.sheet1  # première feuille
 
     try:
-        # Vérifie si la première ligne (en-tête) existe déjà
-        headers = sheet.row_values(1)
-        if not headers:
+        # 🔹 Si le header n’existe pas, on le crée une fois
+        existing_headers = worksheet.row_values(1)
+        if not existing_headers:
             headers = ["nomEleve", "classe", "sexe", "annee"] + [f"q{i}" for i in range(1, 45)]
-            sheet.append_row(headers)
+            worksheet.append_row(headers)
 
-        # Crée une nouvelle ligne à partir des données reçues
+        # 🔹 Ajoute la réponse unique
         row = [data.get("nomEleve", ""), data.get("classe", ""), data.get("sexe", ""), data.get("annee", "")]
         for i in range(1, 45):
             row.append(data.get(f"q{i}", ""))
-        sheet.append_row(row)
 
-        print("[SUBMIT] ligne ajoutée avec succès")
+        worksheet.append_row(row, value_input_option="USER_ENTERED")
+        print("[SUBMIT] ✅ ligne ajoutée dans Google Sheets")
         return jsonify({"status": "ok"})
-
     except Exception as e:
-        print(f"[ERREUR Google Sheets] {e}")
+        print(f"[SUBMIT][ERREUR] {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route("/data")
 def get_data():
-    sheet = get_gsheet()
-    if not sheet:
+    from google.oauth2.service_account import Credentials
+    import json
+    import os
+    import gspread
+
+    creds_json = os.environ.get("GOOGLE_CREDS_JSON")
+    sheet_id = os.environ.get("SHEET_ID")
+
+    if not creds_json or not sheet_id:
         return jsonify([])
 
+    creds = Credentials.from_service_account_info(json.loads(creds_json), scopes=[
+        "https://www.googleapis.com/auth/spreadsheets.readonly",
+        "https://www.googleapis.com/auth/drive.readonly"
+    ])
+    gc = gspread.authorize(creds)
+    sh = gc.open_by_key(sheet_id)
+    worksheet = sh.sheet1
+
     try:
-        records = sheet.get_all_records()
+        records = worksheet.get_all_records()
+        print(f"[DATA] ✅ {len(records)} lignes lues depuis Google Sheets")
         return jsonify(records)
     except Exception as e:
         print(f"[ERREUR get_data] {e}")
