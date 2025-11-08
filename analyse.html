@@ -256,9 +256,16 @@ async function loadData() {
       const previousEleve = filterEleve.value;
       filterEleve.innerHTML = '<option value="">Tous</option>' + rows.map((r, i) => {
         const nom = r.nomEleve && r.nomEleve.trim() !== "" ? r.nomEleve : `Élève ${i + 1}`;
-        const classe = String(r.classe || "").replace(".0", "").trim();
-        const label = `${nom} – ${classe} – ${r.sexe} – ${r.annee || ""}`;
-        return `<option value="${i}">${label}</option>`;
+
+// 🔹 Forcer la classe à être une chaîne de texte
+let classe = r.classe;
+if (classe !== undefined && classe !== null) {
+  classe = String(classe).replace(".0", "").trim();
+}
+
+// 🔹 Ajouter l’année dans le label
+const label = `${nom} – ${classe || "?"} – ${r.sexe || "?"} – ${r.annee || ""}`;
+return `<option value="${i}">${label}</option>`;
       }).join('');
       filterEleve.value = previousEleve;
 
@@ -284,12 +291,14 @@ async function loadData() {
       if (eleveIndex !== "") {
         filtered = [rows[parseInt(eleveIndex)]];
       } else {
-        filtered = rows.filter(row =>
+        filtered = rows.filter(row =>{
+          const classeRow = String(row.classe || "").replace(".0", "").trim();
+          return (
           (!classe || String(row.classe) === classe) &&
           (!sexe || row.sexe === sexe)
           (!annee || String(row.annee) === annee)
         );
-      }
+      });
 
       const syntheseBlock = document.getElementById('synthese');
       syntheseBlock.innerHTML = "";
