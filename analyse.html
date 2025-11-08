@@ -256,7 +256,8 @@ async function loadData() {
       const previousEleve = filterEleve.value;
       filterEleve.innerHTML = '<option value="">Tous</option>' + rows.map((r, i) => {
         const nom = r.nomEleve && r.nomEleve.trim() !== "" ? r.nomEleve : `Élève ${i + 1}`;
-        const label = `${nom} – ${String(r.classe)} – ${r.sexe}`;
+        const classe = String(r.classe || "").replace(".0", "").trim();
+        const label = `${nom} – ${classe} – ${r.sexe} – ${r.annee || ""}`;
         return `<option value="${i}">${label}</option>`;
       }).join('');
       filterEleve.value = previousEleve;
