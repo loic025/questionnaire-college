@@ -158,7 +158,7 @@
           sub3.className = 'subgroup-title';
           sub3.style.cursor = "pointer";
           sub3.style.color = "#0056b3";
-          sub3.textContent = "▶ Si tu as l’impression d’être embêté(e) souvent dans ton établissement scolaire ou sur Internet :";
+          sub3.textContent = "▶ Si tu as l’impression d’être embêté(e) souvent dans ton établissement scolaire ou sur Internet (clique ici):";
 
           // 🔹 Crée le conteneur pour les questions 35–38 (caché par défaut)
           const optionalSection = document.createElement('div');
@@ -170,7 +170,7 @@
           sub3.addEventListener('click', () => {
           const isVisible = optionalSection.style.display === "block";
           optionalSection.style.display = isVisible ? "none" : "block";
-          sub3.textContent = (isVisible ? "▶" : "▼") + " Si tu as l’impression d’être embêté(e) souvent dans ton établissement scolaire ou sur Internet :";
+          sub3.textContent = (isVisible ? "▶" : "▼") + " Si tu as l’impression d’être embêté(e) souvent dans ton établissement scolaire ou sur Internet (clique ici):";
           });
 
           container.appendChild(sub3);
