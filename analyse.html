@@ -99,6 +99,17 @@
           <option>Autre</option>
         </select>
       </label>
+      <label>Année :
+  <select id="filterAnnee">
+    <option value="">Toutes</option>
+    <option>2015 ou après</option>
+    <option>2014</option>
+    <option>2013</option>
+    <option>2012</option>
+    <option>2011</option>
+    <option>2010 ou avant</option>
+  </select>
+</label>
       <label>Élève :
         <select id="filterEleve"></select>
       </label>
@@ -245,7 +256,7 @@ async function loadData() {
       const previousEleve = filterEleve.value;
       filterEleve.innerHTML = '<option value="">Tous</option>' + rows.map((r, i) => {
         const nom = r.nomEleve && r.nomEleve.trim() !== "" ? r.nomEleve : `Élève ${i + 1}`;
-        const label = `${nom} – ${r.classe} – ${r.sexe}`;
+        const label = `${nom} – ${String(r.classe)} – ${r.sexe}`;
         return `<option value="${i}">${label}</option>`;
       }).join('');
       filterEleve.value = previousEleve;
@@ -265,14 +276,17 @@ async function loadData() {
       const classe = document.getElementById('filterClasse').value;
       const sexe = document.getElementById('filterSexe').value;
       const eleveIndex = filterEleve.value;
+      const annee = document.getElementById('filterAnnee').value;
+
 
       let filtered;
       if (eleveIndex !== "") {
         filtered = [rows[parseInt(eleveIndex)]];
       } else {
         filtered = rows.filter(row =>
-          (!classe || row.classe === classe) &&
+          (!classe || String(row.classe) === classe) &&
           (!sexe || row.sexe === sexe)
+          (!annee || String(row.annee) === annee)
         );
       }
 
@@ -421,6 +435,8 @@ document.getElementById('synthese').insertAdjacentHTML('beforeend', `<p style="t
     document.getElementById("filterSexe").addEventListener("change", loadData);
     document.getElementById("filterQuestion").addEventListener("change", loadData);
     document.getElementById("filterEleve").addEventListener("change", loadData);
+    document.getElementById("filterAnnee").addEventListener("change", loadData);
+
 
 function exportCSV() {
   fetch('/data')
