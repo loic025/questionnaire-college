@@ -260,9 +260,11 @@ async function loadData() {
 // 🔹 Forcer la classe à être une chaîne de texte
 let classe = r.classe;
 if (classe !== undefined && classe !== null) {
-  classe = String(classe).replace(".0", "").trim();
+  classe = "'" + String(classe).replace(".0", "").trim();
 }
 
+        classe = classe.replace(/^'/, ""); // supprime l'apostrophe au début si elle existe
+        
 // 🔹 Ajouter l’année dans le label
 const label = `${nom} – ${classe || "?"} – ${r.sexe || "?"} – ${r.annee || ""}`;
 return `<option value="${i}">${label}</option>`;
