@@ -336,7 +336,9 @@ if (syntheseBlock) {
     syntheseBlock.style.display = 'none';
   }
 }
-  
+  // 🔹 Avant d’afficher de nouveaux graphiques, on nettoie l’affichage précédent
+const container = document.getElementById("chartsContainer");
+container.innerHTML = "";
   // ✅ Ajout clé : affichage des graphiques
   renderCharts(filtered);
   }
