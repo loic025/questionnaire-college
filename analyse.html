@@ -185,6 +185,18 @@ function renderCharts(data) {
   
   container.innerHTML = "";
 
+   // 🧹 2️⃣ Détruit tous les anciens graphiques Chart.js (même invisibles)
+  if (activeCharts.length > 0) {
+    activeCharts.forEach(chart => {
+      try {
+        chart.destroy();
+      } catch (e) {
+        console.warn("Erreur destruction graphique :", e);
+      }
+    });
+    activeCharts = [];
+  }
+  
   if (!data || !data.length) {
       container.innerHTML = "<p style='color:red; text-align:center;'>Aucune donnée disponible pour ce filtre.</p>";
     return;
