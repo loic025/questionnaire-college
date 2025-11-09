@@ -175,107 +175,89 @@
       "Connais-tu un(e) élève harcelé(e) dans ta classe ?"
     ];
 
-    let activeCharts = [];
+ let activeCharts = [];
+
 function renderCharts(data) {
   const container = document.getElementById("chartsContainer");
 
-    // 🔹 Détruire les anciens graphiques Chart.js pour éviter qu'ils restent visibles
-  activeCharts.forEach(chart => chart.destroy());
-  activeCharts = [];
-  
-  container.innerHTML = "";
-
-   // 🧹 2️⃣ Détruit tous les anciens graphiques Chart.js (même invisibles)
-  if (activeCharts.length > 0) {
+  // 🧹 1️⃣ Supprimer les anciens graphiques
+  if (activeCharts.length) {
     activeCharts.forEach(chart => {
-      try {
-        chart.destroy();
-      } catch (e) {
-        console.warn("Erreur destruction graphique :", e);
-      }
+      try { chart.destroy(); } catch (e) {}
     });
     activeCharts = [];
   }
-  
+
+  // 🧹 2️⃣ Nettoyer le conteneur
+  container.innerHTML = "";
+
+  // 🚨 3️⃣ Si pas de données, message et retour
   if (!data || !data.length) {
-      container.innerHTML = "<p style='color:red; text-align:center;'>Aucune donnée disponible pour ce filtre.</p>";
+    container.innerHTML = "<p style='color:red; text-align:center;'>Aucune donnée disponible pour ce filtre.</p>";
     return;
   }
 
-const questionValue = parseInt(document.getElementById("filterQuestion").value || "0");
-const questionsToRender = questionValue ? [questionValue] : Array.from({length: 44}, (_, i) => i + 1);
+  // 🔢 4️⃣ Déterminer les questions à afficher
+  const questionValue = parseInt(document.getElementById("filterQuestion").value || "0");
+  const questionsToRender = questionValue ? [questionValue] : Array.from({ length: 44 }, (_, i) => i + 1);
 
-for (const q of questionsToRender) {
-  // 🟢 Cas 1 : Questions Oui / Non (35 à 44)
-  if (q >= 35 && q <= 44) {
-    const oui = data.filter(r => (r[`q${q}`] || "").toString().toLowerCase() === "oui").length;
-    const non = data.filter(r => (r[`q${q}`] || "").toString().toLowerCase() === "non").length;
+  // 🔁 5️⃣ Boucle sur chaque question
+  for (const q of questionsToRender) {
+    // 🟢 Cas 1 : Oui/Non
+    if (q >= 35 && q <= 44) {
+      const oui = data.filter(r => (r[`q${q}`] || "").toString().toLowerCase() === "oui").length;
+      const non = data.filter(r => (r[`q${q}`] || "").toString().toLowerCase() === "non").length;
+
+      const chartBox = document.createElement("div");
+      chartBox.classList.add("chart-box");
+      chartBox.innerHTML = `<canvas id="chartQ${q}" width="220" height="220"></canvas>`;
+      container.appendChild(chartBox);
+
+      const chart = new Chart(document.getElementById(`chartQ${q}`).getContext("2d"), {
+        type: "pie",
+        data: { labels: ["Oui", "Non"], datasets: [{ data: [oui, non] }] },
+        options: {
+          plugins: {
+            title: { display: true, text: questionLabels[q - 1] },
+            legend: { position: "bottom" }
+          }
+        }
+      });
+
+      activeCharts.push(chart);
+      continue;
+    }
+
+    // 🔵 Cas 2 : 1-4
+    const counts = [0, 0, 0, 0];
+    data.forEach(r => {
+      const val = (r[`q${q}`] || "").toString().trim();
+      if (["1", "2", "3", "4"].includes(val)) counts[parseInt(val, 10) - 1]++;
+    });
 
     const chartBox = document.createElement("div");
     chartBox.classList.add("chart-box");
     chartBox.innerHTML = `<canvas id="chartQ${q}" width="220" height="220"></canvas>`;
     container.appendChild(chartBox);
 
-    // 🔹 On crée le graphique et on le stocke dans activeCharts
-    const chart = new Chart(document.getElementById(`chartQ${q}`).getContext("2d"), {
+    const ctx = document.getElementById(`chartQ${q}`).getContext("2d");
+    const chart = new Chart(ctx, {
       type: "pie",
       data: {
-        labels: ["Oui", "Non"],
-        datasets: [{ data: [oui, non] }]
+        labels: ["1", "2", "3", "4"],
+        datasets: [{ data: counts }]
       },
       options: {
         plugins: {
-          title: {
-  display: true,
-  text: questionValue
-    ? `${questionLabels[q - 1]}`
-    : `Question ${q} — ${questionLabels[q - 1]}`
-},
+          title: { display: true, text: questionLabels[q - 1] },
           legend: { position: "bottom" }
         }
       }
     });
+
     activeCharts.push(chart);
-    continue;
   }
-
-  // 🔵 Cas 2 : Questions à 4 choix (1 à 34)
-  const counts = [0, 0, 0, 0];
-  data.forEach(r => {
-    const val = (r[`q${q}`] || "").toString().trim();
-    if (["1", "2", "3", "4"].includes(val)) {
-      counts[parseInt(val, 10) - 1]++;
-    }
-  });
-
-  const chartBox = document.createElement("div");
-  chartBox.classList.add("chart-box");
-  chartBox.innerHTML = `<canvas id="chartQ${q}" width="220" height="220"></canvas>`;
-  container.appendChild(chartBox);
-
-  // 🔹 On crée le graphique et on le stocke dans activeCharts
-const ctx = document.getElementById(`chartQ${q}`).getContext("2d");
-const chart = new Chart(ctx, {
-  type: "pie",
-  data: {
-    labels: ["1", "2", "3", "4"],
-    datasets: [{ data: counts }]
-  },
-  options: {
-    plugins: {
-      title: {
-        display: true,
-        text: questionValue
-          ? `${questionLabels[q - 1]}`
-          : `Question ${q} — ${questionLabels[q - 1]}`
-      },
-      legend: { position: "bottom" }
-    }
-  }
-});
-  activeCharts.push(chart);
 }
-  }
     async function resetData() {
       if (!confirm("⚠️ Es-tu sûr(e) de vouloir effacer TOUTES les données du fichier ?")) return;
 
@@ -355,8 +337,8 @@ if (eleveIndex !== "") {
 );
 
   // 🔹 Si aucune donnée trouvée, on tente un match partiel (ex: "3e" dans "3è1")
-  if (!filtered.length && classeSel) {
-    const numClasse = classeSel.match(/\d+[eè]?\d*/)?.[0] || "";
+  if (!filtered.length && classe) {
+    const numClasse = classe.match(/\d+[eè]?\d*/)?.[0] || "";
     filtered = rows.filter(row => norm(row.classe).includes(numClasse));
   }
 }
