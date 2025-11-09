@@ -126,7 +126,6 @@
 
   <script>
     let allData = [];
-    let activeCharts = []; // stocke les graphiques en cours pour les détruire ensuite
     const yesNoQuestions = Array.from({length: 10}, (_, i) => 35 + i); // q35 à q44
 
      const questionLabels = [
@@ -214,7 +213,12 @@ for (const q of questionsToRender) {
       },
       options: {
         plugins: {
-          title: { display: true, text: `Question ${q}` },
+          title: {
+  display: true,
+  text: questionValue
+    ? `${questionLabels[q - 1]}`
+    : `Question ${q} — ${questionLabels[q - 1]}`
+},
           legend: { position: "bottom" }
         }
       }
@@ -238,19 +242,25 @@ for (const q of questionsToRender) {
   container.appendChild(chartBox);
 
   // 🔹 On crée le graphique et on le stocke dans activeCharts
-  const chart = new Chart(document.getElementById(`chartQ${q}`).getContext("2d"), {
-    type: "pie",
-    data: {
-      labels: ["1", "2", "3", "4"],
-      datasets: [{ data: counts }]
-    },
-    options: {
-      plugins: {
-        title: { display: true, text: `Question ${q}` },
-        legend: { position: "bottom" }
-      }
+const ctx = document.getElementById(`chartQ${q}`).getContext("2d");
+const chart = new Chart(ctx, {
+  type: "pie",
+  data: {
+    labels: ["1", "2", "3", "4"],
+    datasets: [{ data: counts }]
+  },
+  options: {
+    plugins: {
+      title: {
+        display: true,
+        text: questionValue
+          ? `${questionLabels[q - 1]}`
+          : `Question ${q} — ${questionLabels[q - 1]}`
+      },
+      legend: { position: "bottom" }
     }
-  });
+  }
+});
   activeCharts.push(chart);
 }
     async function resetData() {
