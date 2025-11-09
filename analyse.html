@@ -175,35 +175,31 @@
       "Connais-tu un(e) élève harcelé(e) dans ta classe ?"
     ];
     
-    function renderCharts(data) {
-      const container = document.getElementById("chartsContainer");
-      container.innerHTML = "";
+function renderCharts(data) {
+  const container = document.getElementById("chartsContainer");
+  container.innerHTML = "";
 
-      if (!data.length) {
-        container.innerHTML = "<p>Aucune donnée disponible.</p>";
-        return;
-      }
-    // 🔁 Boucle sur toutes les questions
+  if (!data || !data.length) {
+    container.innerHTML = "<p>Aucune donnée disponible pour ce filtre.</p>";
+    return;
+  }
+
   for (let q = 1; q <= 44; q++) {
-
     // 🟢 Cas 1 : Questions Oui / Non (35 à 44)
     if (q >= 35 && q <= 44) {
-      const oui = filtered.filter(row => (row[`q${q}`] || "").toString().toLowerCase() === "oui").length;
-      const non = filtered.filter(row => (row[`q${q}`] || "").toString().toLowerCase() === "non").length;
+      const oui = data.filter(r => (r[`q${q}`] || "").toString().toLowerCase() === "oui").length;
+      const non = data.filter(r => (r[`q${q}`] || "").toString().toLowerCase() === "non").length;
 
       const chartBox = document.createElement("div");
       chartBox.classList.add("chart-box");
-      chartBox.innerHTML = `<canvas id="chartQ${q}" width="200" height="200"></canvas>`;
+      chartBox.innerHTML = `<canvas id="chartQ${q}" width="220" height="220"></canvas>`;
       container.appendChild(chartBox);
 
       new Chart(document.getElementById(`chartQ${q}`).getContext("2d"), {
         type: "pie",
         data: {
           labels: ["Oui", "Non"],
-          datasets: [{
-            data: [oui, non],
-            backgroundColor: ["#4CAF50", "#F44336"]
-          }]
+          datasets: [{ data: [oui, non] }]
         },
         options: {
           plugins: {
@@ -217,19 +213,31 @@
 
     // 🔵 Cas 2 : Questions à 4 choix (1 à 34)
     const counts = [0, 0, 0, 0];
-    data.forEach(row => {
-      const val = (row[`q${q}`] || "").toString().trim();
-if (["1", "2", "3", "4"].includes(val)) {
-  counts[parseInt(val) - 1]++;
-}
+    data.forEach(r => {
+      const val = (r[`q${q}`] || "").toString().trim();
+      if (["1", "2", "3", "4"].includes(val)) {
+        counts[parseInt(val, 10) - 1]++;
+      }
     });
 
     const chartBox = document.createElement("div");
     chartBox.classList.add("chart-box");
-    chartBox.innerHTML = `<canvas id="chartQ${q}" width="200" height="200"></canvas>`;
+    chartBox.innerHTML = `<canvas id="chartQ${q}" width="220" height="220"></canvas>`;
     container.appendChild(chartBox);
 
-    renderChart(document.getElementById(`chartQ${q}`), counts, q);
+    new Chart(document.getElementById(`chartQ${q}`).getContext("2d"), {
+      type: "pie",
+      data: {
+        labels: ["1", "2", "3", "4"],
+        datasets: [{ data: counts }]
+      },
+      options: {
+        plugins: {
+          title: { display: true, text: `Question ${q}` },
+          legend: { position: "bottom" }
+        }
+      }
+    });
   }
 }
     async function resetData() {
