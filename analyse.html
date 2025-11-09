@@ -71,6 +71,7 @@
       <button onclick="exportFilteredCSV()">🎯 Exporter réponses filtrées</button>
       <button onclick="window.print()">📄 Exporter en PDF</button>
       <button id="resetButton" onclick="resetData()">🗑 Réinitialiser les données</button>
+      <button id="reloadDataBtn" class="reload-btn">🔄 Recharger les données</button>
     </div>
 
     <div class="filters">
@@ -501,7 +502,15 @@ document.getElementById('synthese').insertAdjacentHTML('beforeend', `<p style="t
     document.getElementById("filterEleve").addEventListener("change", loadData);
     document.getElementById("filterAnnee").addEventListener("change", loadData);
 
-
+// 🆕 Bouton "Recharger les données"
+document.getElementById("reloadDataBtn").addEventListener("click", async () => {
+  const btn = document.getElementById("reloadDataBtn");
+  btn.disabled = true;
+  btn.textContent = "⏳ Rechargement...";
+  await loadData();
+  btn.textContent = "🔄 Recharger les données";
+  btn.disabled = false;
+});
 function exportCSV() {
   fetch('/data')
     .then(response => response.json())
