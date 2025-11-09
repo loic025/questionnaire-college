@@ -375,6 +375,14 @@ if (syntheseBlock) {
   // 🔹 Avant d’afficher de nouveaux graphiques, on nettoie l’affichage précédent
 const container = document.getElementById("chartsContainer");
 container.innerHTML = "";
+
+  // 🚨 Si aucune donnée filtrée, on vide et on affiche un message
+if (!filtered || filtered.length === 0) {
+  activeCharts.forEach(chart => chart.destroy());
+  activeCharts = [];
+  container.innerHTML = "<p style='color:red; text-align:center;'>Aucune donnée disponible pour ce filtre.</p>";
+  return;
+}
   // ✅ Ajout clé : affichage des graphiques
   renderCharts(filtered);
   }
