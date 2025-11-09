@@ -313,9 +313,10 @@ if (eleveIndex !== "") {
     .replace(/e(?=\d)/g, "e");
 
   filtered = rows.filter(row =>
-    (!classeSel || norm(row.classe) === norm(classeSel)) &&
-    (!sexeSel || norm(row.sexe) === norm(sexeSel))
-  );
+  (!classe || norm(row.classe) === norm(classe)) &&
+  (!sexe || norm(row.sexe) === norm(sexe)) &&
+  (!annee || norm(row.annee) === norm(annee))
+);
 
   // 🔹 Si aucune donnée trouvée, on tente un match partiel (ex: "3e" dans "3è1")
   if (!filtered.length && classeSel) {
