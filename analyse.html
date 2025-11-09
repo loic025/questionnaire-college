@@ -298,19 +298,33 @@ return `<option value="${i}">${label}</option>`;
 
 
       let filtered;
-      if (eleveIndex !== "") {
-        filtered = [rows[parseInt(eleveIndex)]];
-      } else {
-        filtered = rows.filter(row =>{
-          const classeRow = String(row.classe || "").replace(".0", "").trim();
-          return (
-          (!classe || String(row.classe) === classe) &&
-          (!sexe || row.sexe === sexe)
-          (!annee || String(row.annee) === annee)
-        );
-      });
-    }
+// 🔹 Si un élève précis est sélectionné → on affiche uniquement cet élève
+if (eleveIndex !== "") {
+  filtered = [rows[parseInt(eleveIndex)]];
+} else {
+  // 🔹 Sinon on applique les filtres classe/sexe avec normalisation
+  const norm = (s) => (s ?? "")
+    .toString()
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, "")
+    .replace(/e(?=\d)/g, "e");
 
+  filtered = rows.filter(row =>
+    (!classeSel || norm(row.classe) === norm(classeSel)) &&
+    (!sexeSel || norm(row.sexe) === norm(sexeSel))
+  );
+
+  // 🔹 Si aucune donnée trouvée, on tente un match partiel (ex: "3e" dans "3è1")
+  if (!filtered.length && classeSel) {
+    const numClasse = classeSel.match(/\d+[eè]?\d*/)?.[0] || "";
+    filtered = rows.filter(row => norm(row.classe).includes(numClasse));
+  }
+}
+
+// ✅ Met à jour la synthèse et les graphiques
       const syntheseBlock = document.getElementById('synthese');
       syntheseBlock.innerHTML = "";
 if (syntheseBlock) {
